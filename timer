@@ -1,0 +1,74 @@
+#!/usr/bin/python
+
+import time
+import curses as crs
+import os
+import argparse
+
+parser = argparse.ArgumentParser(description='timer app')
+parser.add_argument('time', type = str, help = 'time to count to')
+args = parser.parse_args()
+                    
+stdscr = crs.initscr()
+crs.start_color()
+crs.curs_set(0)
+# crs.noecho()
+# crs.cbreak()
+crs.use_default_colors()
+stdscr.keypad(1)
+
+crs.init_pair(1, crs.COLOR_WHITE, -1)
+
+def get_time(inputString):
+    """interpret the input as a number of seconds"""
+    conversion = [1, 60, 60*60]
+    return sum(int(digit)*conv for digit, conv
+               in zip(inputString.split(":")[::-1], conversion))
+    
+def make_time(secs):
+    """format a time interval (in seconds) into a pretty string"""
+    units = [str(secs/3600),
+             str(secs%3600/60),
+             str(secs%60)]
+
+    for i,s in enumerate(units):
+        if int(s)<10:
+            units[i] = "0"+s
+            
+    return ":".join(units)
+    
+
+def bar(total, current, length):
+    length = maxWidth - 22
+    n = int(float(current)/total*length)
+    return '['+(length-n)*'#'+(n)*'.'+']'
+
+
+if __name__ == '__main__':
+    init_time = get_time(args.time)
+    rem_time = init_time
+    
+    while rem_time:
+        maxHeight, maxWidth = stdscr.getmaxyx()
+
+        rem_time -= 1
+        stdscr.addstr(maxHeight/2,
+                      1,
+                      make_time(init_time - rem_time) + ' ' +
+                      bar(init_time, rem_time, maxWidth - 22) + ' ' +
+                      make_time(init_time),
+                      crs.color_pair(1))
+        stdscr.refresh()
+        time.sleep(1)
+        stdscr.erase()
+        
+    stdscr.addstr(1,1,"time up!", crs.color_pair(1))
+    stdscr.refresh()
+    os.system("vlc --intf rc alert.mp3")
+    time.sleep(20)
+        
+    crs.nocbreak()
+    stdscr.keypad(0)
+    crs.cur_set(1)
+    crs.echo()
+    crs.endwin()
