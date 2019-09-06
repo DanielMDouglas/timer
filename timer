@@ -21,9 +21,12 @@ crs.init_pair(1, crs.COLOR_WHITE, -1)
 
 def get_time(inputString):
     """interpret the input as a number of seconds"""
-    conversion = [1, 60, 60*60]
-    return sum(int(digit)*conv for digit, conv
-               in zip(inputString.split(":")[::-1], conversion))
+    if inputString == "tea":
+        return 180
+    else:
+        conversion = [1, 60, 60*60]
+        return sum(int(digit)*conv for digit, conv
+                   in zip(inputString.split(":")[::-1], conversion))
     
 def make_time(secs):
     """format a time interval (in seconds) into a pretty string"""
