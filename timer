@@ -2,7 +2,6 @@
 
 import time
 import curses as crs
-import os
 import argparse
 
 parser = argparse.ArgumentParser(description='timer app')
@@ -12,12 +11,13 @@ args = parser.parse_args()
 stdscr = crs.initscr()
 crs.start_color()
 crs.curs_set(0)
-# crs.noecho()
-# crs.cbreak()
 crs.use_default_colors()
 stdscr.keypad(1)
+stdscr.scrollok(1)
 
 crs.init_pair(1, crs.COLOR_WHITE, -1)
+crs.init_pair(2, crs.COLOR_WHITE, crs.COLOR_BLACK)
+crs.init_pair(3, crs.COLOR_BLACK, crs.COLOR_WHITE)
 
 def get_time(inputString):
     """interpret the input as a number of seconds"""
@@ -42,12 +42,11 @@ def make_time(secs):
     
 
 def bar(total, current, length):
-    length = maxWidth - 22
     n = int(float(current)/total*length)
     return '['+(length-n)*'#'+(n)*'.'+']'
 
 
-if __name__ == '__main__':
+def main_timer():
     init_time = get_time(args.time)
     rem_time = init_time
     
@@ -64,14 +63,43 @@ if __name__ == '__main__':
         stdscr.refresh()
         time.sleep(1)
         stdscr.erase()
-        
-    stdscr.addstr(1,1,"time up!", crs.color_pair(1))
-    stdscr.refresh()
-    os.system("vlc --intf rc alert.mp3")
-    time.sleep(20)
-        
+
+def time_up():
+    color_ind = 2
+    dt = 0.5
+    t = 0
+    while t < 10:
+        maxHeight, maxWidth = stdscr.getmaxyx()
+
+        for i in range(maxWidth):
+            for j in range(maxHeight):
+                stdscr.insstr(j, i, " ", crs.color_pair(color_ind))
+
+        stdscr.addstr(maxHeight/2, maxWidth/2-4, "time up!", crs.color_pair(color_ind))
+        if color_ind == 2:
+            color_ind = 3
+        elif color_ind == 3:
+            color_ind = 2
+        stdscr.refresh()
+        time.sleep(dt)
+        stdscr.erase()
+        t += dt   
     crs.nocbreak()
     stdscr.keypad(0)
-    crs.cur_set(1)
+    stdscr.scrollok(0)
+    crs.curs_set(1)
     crs.echo()
     crs.endwin()
+
+        
+if __name__ == '__main__':
+    try:
+        main_timer()
+        time_up()
+    except KeyboardInterrupt:
+        crs.nocbreak()
+        stdscr.keypad(0)
+        stdscr.scrollok(0)
+        crs.curs_set(1)
+        crs.echo()
+        crs.endwin()
